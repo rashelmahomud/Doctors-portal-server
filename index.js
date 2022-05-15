@@ -53,6 +53,15 @@ async function run() {
         });
 
 
+        // All youser data sent started code here  
+        app.get('/user', verifyJWT, async(req,res) => {
+            const users = await userCollection.find().toArray();
+            res.send(users);
+        })
+        // All youser data sent Ends code here
+
+
+
         // new user count in data base start here===
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;

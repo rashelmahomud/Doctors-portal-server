@@ -60,12 +60,12 @@ async function run() {
         })
         // All youser data sent Ends code here
 
-        // app.get('admin/:email', async(req,res)=>{
-        //     const email = req.params.email;
-        //     const user = await userCollection.findOne({email: email});
-        //     const isAdmin = user.role === 'admin';
-        //     res.send({admin : isAdmin});
-        // })
+        app.get('/admin/:email', async(req,res)=>{
+            const email = req.params.email;
+            const user = await userCollection.findOne({email: email});
+            const isAdmin = user.role === 'admin';
+            res.send({admin : isAdmin});
+        })
 
 
         // new user count in data base start here===

@@ -189,12 +189,22 @@ async function run() {
 
 
         //=========All Doctors Loaded code here started here==>==========
-        app.get('/doctor',verifyJWT,veryfyAdmin, async(req,res) => {
+        app.get('/doctor', verifyJWT, veryfyAdmin, async (req, res) => {
             const doctors = await doctorCollection.find().toArray();
             res.send(doctors);
         })
         //=========All Doctors Loaded code here Ends here=====^=======
 
+
+        //==========Delete for Doctor Started here==============>=====
+        app.delete('/doctor/:email', verifyJWT, veryfyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = ({email: email});
+            const result = await doctorCollection.deleteOne(filter);
+            res.send(result);
+
+        })
+        //==========Delete for Doctor Ends here==============^=====
 
         // Doctors all data set started here
         app.post('/doctor', verifyJWT, veryfyAdmin, async (req, res) => {

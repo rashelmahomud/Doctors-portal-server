@@ -46,6 +46,22 @@ async function run() {
         const userCollection = client.db('doctors_portal').collection('users');
         const doctorCollection = client.db('doctors_portal').collection('doctors');
 
+
+        //=======VeryFy for Admin Started===========>=============
+
+        const veryfyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollection.findOne({ email: requester });
+            if (requesterAccount.role === 'admin') {
+                next();
+            } else {
+                res.status(403).send({ message: 'forbidden' });
+            }
+        }
+        //=======VeryFy for Admin Ends===========^=============
+
+
+
         app.get('/service', async (req, res) => {
             const query = {};
             const cursor = serviceCollections.find(query).project({ name: 1 });   //ai line ar .project({name: 1}) aita extra doctor ar jonno pora kora.
@@ -102,8 +118,6 @@ async function run() {
             else {
                 res.status(403).send({ message: 'forbidden' });
             }
-
-
         })
         // new Make a Admin in data base ends here===
 
@@ -174,8 +188,7 @@ async function run() {
         // use data remove in all data
 
         // Doctors all data set started here
-        app.post('/doctor', async (req, res) => {
-
+        app.post('/doctor', verifyJWT, veryfyAdmin, async (req, res) => {
             const doctor = req.body;
             const result = await doctorCollection.insertOne(doctor);
             res.send(result);

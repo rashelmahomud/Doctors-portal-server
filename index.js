@@ -187,6 +187,15 @@ async function run() {
 
         // use data remove in all data
 
+
+        //=========All Doctors Loaded code here started here==>==========
+        app.get('/doctor',verifyJWT,veryfyAdmin, async(req,res) => {
+            const doctors = await doctorCollection.find().toArray();
+            res.send(doctors);
+        })
+        //=========All Doctors Loaded code here Ends here=====^=======
+
+
         // Doctors all data set started here
         app.post('/doctor', verifyJWT, veryfyAdmin, async (req, res) => {
             const doctor = req.body;

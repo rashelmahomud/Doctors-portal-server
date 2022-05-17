@@ -44,10 +44,11 @@ async function run() {
         const serviceCollections = client.db('doctors_portal').collection('services');
         const bookingCollection = client.db('doctors_portal').collection('bookings');
         const userCollection = client.db('doctors_portal').collection('users');
+        const doctorCollection = client.db('doctors_portal').collection('doctors');
 
         app.get('/service', async (req, res) => {
             const query = {};
-            const cursor = serviceCollections.find(query);
+            const cursor = serviceCollections.find(query).project({ name: 1 });   //ai line ar .project({name: 1}) aita extra doctor ar jonno pora kora.
             const services = await cursor.toArray();
             res.send(services);
         });
@@ -60,11 +61,11 @@ async function run() {
         })
         // All youser data sent Ends code here
 
-        app.get('/admin/:email', async(req,res)=>{
+        app.get('/admin/:email', async (req, res) => {
             const email = req.params.email;
-            const user = await userCollection.findOne({email: email});
+            const user = await userCollection.findOne({ email: email });
             const isAdmin = user.role === 'admin';
-            res.send({admin : isAdmin});
+            res.send({ admin: isAdmin });
         })
 
 
@@ -88,8 +89,8 @@ async function run() {
         app.put('/user/admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
             const requester = req.decoded.email;
-            const requesterAccount = await userCollection.findOne({email: requester});
-            if(requesterAccount.role === 'admin'){
+            const requesterAccount = await userCollection.findOne({ email: requester });
+            if (requesterAccount.role === 'admin') {
 
                 const filter = { email: email };
                 const updateDoc = {
@@ -98,11 +99,11 @@ async function run() {
                 const result = await userCollection.updateOne(filter, updateDoc);
                 res.send(result);
             }
-            else{
-                res.status(403).send({message: 'forbidden'});
+            else {
+                res.status(403).send({ message: 'forbidden' });
             }
-              
-          
+
+
         })
         // new Make a Admin in data base ends here===
 
@@ -159,8 +160,6 @@ async function run() {
         //     res.send(bookings);
         // })
 
-
-
         app.post('/booking', async (req, res) => {
             const booking = req.body;
             const query = { treatment: booking.treatment, date: booking.date, patient: booking.patient }
@@ -173,6 +172,18 @@ async function run() {
         });
 
         // use data remove in all data
+
+        // Doctors all data set started here
+        app.post('/doctor', async (req, res) => {
+
+            const doctor = req.body;
+            const result = await doctorCollection.insertOne(doctor);
+            res.send(result);
+
+        })
+        // Doctors all data set Ends here
+
+
 
     }
     finally {

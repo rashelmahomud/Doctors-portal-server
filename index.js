@@ -1,11 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const { verify } = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 const app = express();
+const stripe = require('stripe')(process.env.STRIPE_SICRET_KEY); //This is a payment method key
 
 //middleware
 
@@ -35,6 +36,25 @@ function verifyJWT(req, res, next) {
     });
 }
 //veryfy JWT ends here 
+
+
+//========Payment related code started here ============>
+
+    app.post('/create-payment-intent', verifyJWT, async (req,res) =>{
+        const service = req.body;
+        const price = service.price;
+        const amount = price*100;
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount : amount,
+            currency : 'usd',
+            payment_method_types: ['card']
+        });
+        res.send({
+            clientSecret: paymentIntent.client_secret});
+
+    })
+
+//========Payment related code Ends here ===============^
 
 
 async function run() {
@@ -157,16 +177,23 @@ async function run() {
             const patient = req.query.patient;
             const decodedEmail = req.decoded.email;
             if (patient === decodedEmail) {
-
                 const query = { patient: patient };
                 const bookings = await bookingCollection.find(query).toArray();
                 return res.send(bookings);
-
             } else {
                 return res.status(403).send({ message: "forbiden access" })
             }
 
+        });
+
+        //=======booking for cutomers payment =========>
+        app.get('/booking/:id',verifyJWT, async(req,res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const booking = await bookingCollection.findOne(query);
+            res.send(booking);
         })
+        //=======Booking for cutomer payment ^===========
 
         // app.get('/booking', async(req,res) => {
         //     const query = {};

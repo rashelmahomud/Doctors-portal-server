@@ -40,19 +40,20 @@ function verifyJWT(req, res, next) {
 
 //========Payment related code started here ============>
 
-    app.post('/create-payment-intent', verifyJWT, async (req,res) =>{
-        const service = req.body;
-        const price = service.price;
-        const amount = price*100;
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount : amount,
-            currency : 'usd',
-            payment_method_types: ['card']
-        });
-        res.send({
-            clientSecret: paymentIntent.client_secret});
+app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+    const service = req.body;
+    const price = service.price;
+    const amount = price * 100;
+    const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+    });
+    res.send({
+        clientSecret: paymentIntent.client_secret
+    });
 
-    })
+})
 
 //========Payment related code Ends here ===============^
 
@@ -65,6 +66,7 @@ async function run() {
         const bookingCollection = client.db('doctors_portal').collection('bookings');
         const userCollection = client.db('doctors_portal').collection('users');
         const doctorCollection = client.db('doctors_portal').collection('doctors');
+        const paymentCollection = client.db('doctors_portal').collection('payments');
 
 
         //=======VeryFy for Admin Started===========>=============
@@ -186,10 +188,36 @@ async function run() {
 
         });
 
-        //=======booking for cutomers payment =========>
-        app.get('/booking/:id',verifyJWT, async(req,res) => {
+
+        //===============Payment set server and Customer all info==Started=========>
+
+        app.patch('/booking/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
-            const query = {_id: ObjectId(id)};
+            const payment = req.body;
+            const filter = { _id: ObjectId(id)};
+            updateDoc = {
+                $set: {
+                    paid: true,
+                    transetionId: payment.transetionId
+                }
+            }
+
+            const result = await paymentCollection.insertOne(payment);
+            const updatedBooking = await bookingCollection.updateOne(filter, updateDoc);
+            res.send(updateDoc);
+
+
+        })
+
+        //===============Payment set server and Customer all info=====Ends==========^
+
+
+
+
+        //=======booking for cutomers payment =========>
+        app.get('/booking/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
             const booking = await bookingCollection.findOne(query);
             res.send(booking);
         })
@@ -226,7 +254,7 @@ async function run() {
         //==========Delete for Doctor Started here==============>=====
         app.delete('/doctor/:email', verifyJWT, veryfyAdmin, async (req, res) => {
             const email = req.params.email;
-            const filter = ({email: email});
+            const filter = ({ email: email });
             const result = await doctorCollection.deleteOne(filter);
             res.send(result);
 
